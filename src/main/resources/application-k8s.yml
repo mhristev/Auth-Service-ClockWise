@@ -1,0 +1,72 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://keycloak:8180/auth/realms/clockwise
+            user-name-attribute: preferred_username
+            authorization-uri: http://keycloak:8180/auth/realms/clockwise/protocol/openid-connect/auth
+            token-uri: http://keycloak:8180/auth/realms/clockwise/protocol/openid-connect/token
+            jwk-set-uri: http://keycloak:8180/auth/realms/clockwise/protocol/openid-connect/certs
+            user-info-uri: http://keycloak:8180/auth/realms/clockwise/protocol/openid-connect/userinfo
+        registration:
+          keycloak:
+            client-id: auth-service
+            client-secret: v8Sac9YQKLm0ZrGiS9JgwLRMa4Q0pF7c
+            authorization-grant-type: password
+            scope:
+              - openid
+              - profile
+              - email
+              - roles
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8180/auth/realms/clockwise
+          jwk-set-uri: http://keycloak:8180/auth/realms/clockwise/protocol/openid-connect/certs
+  
+  application:
+    name: auth-service
+  
+  r2dbc:
+    url: r2dbc:postgresql://auth-service-db:5432/authdb
+    username: authuser
+    password: authpassword
+    
+  flyway:
+    url: jdbc:postgresql://auth-service-db:5432/authdb
+    user: authuser
+    password: authpassword
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+server:
+  port: 8080
+
+# Keycloak Configuration
+keycloak:
+  server-url: http://keycloak:8180/auth
+  realm: clockwise
+  admin:
+    client-id: admin-cli
+    username: admin
+    password: admin
+
+# Kafka Topics
+kafka:
+  topic:
+    user-registration: user-registration-events
+
+# Logging
+logging:
+  level:
+    com.clockwise.authService: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.r2dbc: DEBUG
+    io.r2dbc.postgresql: DEBUG 

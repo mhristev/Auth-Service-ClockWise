@@ -1,0 +1,78 @@
+Starting a Gradle Daemon, 1 busy and 4 stopped Daemons could not be reused, use --status for details
+> Task :checkKotlinGradlePluginConfigurationErrors
+> Task :processResources UP-TO-DATE
+> Task :compileKotlin
+> Task :compileJava NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2025-06-02T20:51:12.939+02:00  INFO 50338 --- [authService] [           main] c.c.a.AuthServiceApplicationKt           : Starting AuthServiceApplicationKt using Java 21.0.6 with PID 50338 (/Users/martinhristev/Developer/Kotlin/ClockWiseAPI/microservices/authService/build/classes/kotlin/main started by martinhristev in /Users/martinhristev/Developer/Kotlin/ClockWiseAPI/microservices/authService)
+2025-06-02T20:51:12.941+02:00 DEBUG 50338 --- [authService] [           main] c.c.a.AuthServiceApplicationKt           : Running with Spring Boot v3.2.3, Spring v6.1.4
+2025-06-02T20:51:12.941+02:00  INFO 50338 --- [authService] [           main] c.c.a.AuthServiceApplicationKt           : No active profile set, falling back to 1 default profile: "default"
+2025-06-02T20:51:13.315+02:00  INFO 50338 --- [authService] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2025-06-02T20:51:13.395+02:00  INFO 50338 --- [authService] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 77 ms. Found 1 R2DBC repository interface.
+2025-06-02T20:51:14.306+02:00 DEBUG 50338 --- [authService] [           main] o.s.web.client.RestTemplate              : HTTP GET http://localhost:8180/auth/realms/clockwise/.well-known/openid-configuration
+2025-06-02T20:51:14.318+02:00 DEBUG 50338 --- [authService] [           main] o.s.web.client.RestTemplate              : Accept=[application/json, application/*+json]
+2025-06-02T20:51:14.418+02:00 DEBUG 50338 --- [authService] [           main] o.s.web.client.RestTemplate              : Response 200 OK
+2025-06-02T20:51:14.420+02:00 DEBUG 50338 --- [authService] [           main] o.s.web.client.RestTemplate              : Reading to [java.util.Map<java.lang.String, java.lang.Object>]
+2025-06-02T20:51:14.524+02:00 DEBUG 50338 --- [authService] [           main] s.w.r.r.m.a.RequestMappingHandlerMapping : 3 mappings in 'requestMappingHandlerMapping'
+2025-06-02T20:51:14.593+02:00 DEBUG 50338 --- [authService] [           main] o.s.w.r.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-06-02T20:51:14.640+02:00 DEBUG 50338 --- [authService] [           main] o.s.w.r.r.m.a.ControllerMethodResolver   : ControllerAdvice beans: none
+2025-06-02T20:51:14.652+02:00 DEBUG 50338 --- [authService] [           main] o.s.w.s.adapter.HttpWebHandlerAdapter    : enableLoggingRequestDetails='false': form data and headers will be masked to prevent unsafe logging of potentially sensitive data
+2025-06-02T20:51:14.861+02:00  INFO 50338 --- [authService] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:5433/auth_db (PostgreSQL 15.13)
+2025-06-02T20:51:14.900+02:00  INFO 50338 --- [authService] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.017s)
+2025-06-02T20:51:14.932+02:00  INFO 50338 --- [authService] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 1
+2025-06-02T20:51:14.935+02:00  INFO 50338 --- [authService] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2025-06-02T20:51:17.122+02:00  WARN 50338 --- [authService] [           main] onfigReactiveWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-06-02T20:51:17.143+02:00  INFO 50338 --- [authService] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-02T20:51:17.160+02:00 ERROR 50338 --- [authService] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8081 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8081 or configure this application to listen on another port.
+
+
+> Task :bootRun FAILED
+
+[Incubating] Problems report is available at: file:///Users/martinhristev/Developer/Kotlin/ClockWiseAPI/microservices/authService/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':bootRun'.
+> Process 'command '/Users/martinhristev/Library/Java/JavaVirtualMachines/graalvm-jdk-21.0.6/Contents/Home/bin/java'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 12s
+5 actionable tasks: 4 executed, 1 up-to-date

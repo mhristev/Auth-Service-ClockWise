@@ -127,6 +127,153 @@ class KeycloakService {
         }
     }
 
+    suspend fun createRegularUser(email: String, password: String, firstName: String, lastName: String): String {
+        logger.info("Starting createRegularUser for email: $email")
+        val keycloak = getKeycloakInstance()
+        
+        try {
+            // Create user first
+            logger.info("Creating user in Keycloak...")
+            val userId = createUser(email, password, firstName, lastName)
+            logger.info("User created with ID: $userId, now assigning user role...")
+            
+            // Get the user resource
+            val userResource = keycloak.realm(realm).users().get(userId)
+            logger.info("Retrieved user resource for ID: $userId")
+            
+            // Get available realm roles
+            val realmRoles = keycloak.realm(realm).roles().list()
+            logger.info("Retrieved ${realmRoles.size} realm roles")
+            val userRole = realmRoles.find { it.name == "user" }
+            
+            // Assign user realm role
+            if (userRole != null) {
+                logger.info("Found user role, assigning to user: $userId")
+                userResource.roles().realmLevel().add(listOf(userRole))
+                logger.info("Assigned user realm role to user: $userId")
+            } else {
+                logger.error("User role not found in realm. Available roles: ${realmRoles.map { it.name }}")
+            }
+            
+            logger.info("Successfully created regular user with ID: $userId")
+            return userId
+            
+        } catch (e: Exception) {
+            logger.error("Error creating regular user in Keycloak: ${e.message}", e)
+            throw e
+        } finally {
+            keycloak.close()
+        }
+    }
+
+    suspend fun createManagerUser(email: String, password: String, firstName: String, lastName: String): String {
+        val keycloak = getKeycloakInstance()
+        
+        try {
+            // Create user first
+            val userId = createUser(email, password, firstName, lastName)
+            
+            // Get the user resource
+            val userResource = keycloak.realm(realm).users().get(userId)
+            
+            // Get available realm roles
+            val realmRoles = keycloak.realm(realm).roles().list()
+            val managerRole = realmRoles.find { it.name == "manager" }
+            val userRole = realmRoles.find { it.name == "user" }
+            
+            // Assign realm roles
+            if (managerRole != null) {
+                userResource.roles().realmLevel().add(listOf(managerRole))
+                logger.info("Assigned manager realm role to user: $userId")
+            }
+            
+            if (userRole != null) {
+                userResource.roles().realmLevel().add(listOf(userRole))
+                logger.info("Assigned user realm role to user: $userId")
+            }
+            
+            // Get client and assign client-specific roles
+            val clients = keycloak.realm(realm).clients().findByClientId("auth-service")
+            if (clients.isNotEmpty()) {
+                val authClient = clients[0]
+                val clientResource = keycloak.realm(realm).clients().get(authClient.id)
+                val clientRoles = clientResource.roles().list()
+                
+                val managerClientRole = clientRoles.find { it.name == "manager" }
+                if (managerClientRole != null) {
+                    userResource.roles().clientLevel(authClient.id).add(listOf(managerClientRole))
+                    logger.info("Assigned manager client role to user: $userId")
+                }
+            }
+            
+            logger.info("Successfully created manager user with ID: $userId")
+            return userId
+            
+        } catch (e: Exception) {
+            logger.error("Error creating manager user in Keycloak: ${e.message}", e)
+            throw e
+        } finally {
+            keycloak.close()
+        }
+    }
+
+    suspend fun createAdminUser(email: String, password: String, firstName: String, lastName: String): String {
+        val keycloak = getKeycloakInstance()
+        
+        try {
+            // Create user first
+            val userId = createUser(email, password, firstName, lastName)
+            
+            // Get the user resource
+            val userResource = keycloak.realm(realm).users().get(userId)
+            
+            // Get available realm roles
+            val realmRoles = keycloak.realm(realm).roles().list()
+            val adminRole = realmRoles.find { it.name == "admin" }
+            val managerRole = realmRoles.find { it.name == "manager" }
+            val userRole = realmRoles.find { it.name == "user" }
+            
+            // Assign realm roles (admin should have admin, manager, and user roles)
+            if (adminRole != null) {
+                userResource.roles().realmLevel().add(listOf(adminRole))
+                logger.info("Assigned admin realm role to user: $userId")
+            }
+            
+            if (managerRole != null) {
+                userResource.roles().realmLevel().add(listOf(managerRole))
+                logger.info("Assigned manager realm role to user: $userId")
+            }
+            
+            if (userRole != null) {
+                userResource.roles().realmLevel().add(listOf(userRole))
+                logger.info("Assigned user realm role to user: $userId")
+            }
+            
+            // Get client and assign client-specific roles
+            val clients = keycloak.realm(realm).clients().findByClientId("auth-service")
+            if (clients.isNotEmpty()) {
+                val authClient = clients[0]
+                val clientResource = keycloak.realm(realm).clients().get(authClient.id)
+                val clientRoles = clientResource.roles().list()
+                
+                val adminClientRole = clientRoles.find { it.name == "admin" }
+                if (adminClientRole != null) {
+                    userResource.roles().clientLevel(authClient.id).add(listOf(adminClientRole))
+                    logger.info("Assigned admin client role to user: $userId")
+                }
+            }
+            
+            logger.info("Successfully created admin user with ID: $userId")
+            return userId
+            
+        } catch (e: Exception) {
+            logger.error("Error creating admin user in Keycloak: ${e.message}", e)
+            throw e
+        } finally {
+            keycloak.close()
+        }
+    }
+
     suspend fun deleteUser(keycloakUserId: String) {
         val keycloak = getKeycloakInstance()
         

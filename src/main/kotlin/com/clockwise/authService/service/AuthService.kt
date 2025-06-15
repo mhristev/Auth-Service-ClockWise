@@ -69,8 +69,8 @@ class AuthService(
                 throw IllegalArgumentException("Email already registered")
             }
 
-            // Create user in Keycloak
-            val keycloakUserId = keycloakService.createUser(
+            // Create user in Keycloak with 'user' role
+            val keycloakUserId = keycloakService.createRegularUser(
                 email = request.email,
                 password = request.password,
                 firstName = request.firstName,
@@ -141,5 +141,97 @@ class AuthService(
 
     suspend fun refreshToken(refreshToken: String): TokenResponse {
         return keycloakService.refreshToken(refreshToken)
+    }
+
+    suspend fun createAdminUser(request: RegisterRequest): AuthUserDto {
+        try {
+            // Check if user already exists
+            if (authUserRepository.existsByEmail(request.email)) {
+                throw IllegalArgumentException("Email already registered")
+            }
+
+            // Create admin user in Keycloak with roles
+            val keycloakUserId = keycloakService.createAdminUser(
+                email = request.email,
+                password = request.password,
+                firstName = request.firstName,
+                lastName = request.lastName
+            )
+
+            // Create AuthUser record using explicit INSERT
+            val authUser = AuthUser.newUser(
+                email = request.email,
+                firstName = request.firstName,
+                lastName = request.lastName,
+                phoneNumber = request.phoneNumber,
+                keycloakUserId = keycloakUserId
+            )
+
+            val savedAuthUser = r2dbcEntityTemplate.insert(authUser).awaitSingle()
+            logger.info("Created Admin AuthUser with ID: ${savedAuthUser.id}")
+
+            // Publish event for User Service to create corresponding User record
+            val registrationEvent = UserRegistrationEvent(
+                keycloakUserId = keycloakUserId,
+                email = request.email,
+                firstName = request.firstName,
+                lastName = request.lastName,
+                phoneNumber = request.phoneNumber
+            )
+
+            eventPublisherService.publishUserRegistrationEvent(registrationEvent)
+
+            return savedAuthUser.toDto()
+
+        } catch (e: Exception) {
+            logger.error("Error during admin user creation: ${e.message}", e)
+            throw e
+        }
+    }
+
+    suspend fun createManagerUser(request: RegisterRequest): AuthUserDto {
+        try {
+            // Check if user already exists
+            if (authUserRepository.existsByEmail(request.email)) {
+                throw IllegalArgumentException("Email already registered")
+            }
+
+            // Create manager user in Keycloak with roles
+            val keycloakUserId = keycloakService.createManagerUser(
+                email = request.email,
+                password = request.password,
+                firstName = request.firstName,
+                lastName = request.lastName
+            )
+
+            // Create AuthUser record using explicit INSERT
+            val authUser = AuthUser.newUser(
+                email = request.email,
+                firstName = request.firstName,
+                lastName = request.lastName,
+                phoneNumber = request.phoneNumber,
+                keycloakUserId = keycloakUserId
+            )
+
+            val savedAuthUser = r2dbcEntityTemplate.insert(authUser).awaitSingle()
+            logger.info("Created Manager AuthUser with ID: ${savedAuthUser.id}")
+
+            // Publish event for User Service to create corresponding User record
+            val registrationEvent = UserRegistrationEvent(
+                keycloakUserId = keycloakUserId,
+                email = request.email,
+                firstName = request.firstName,
+                lastName = request.lastName,
+                phoneNumber = request.phoneNumber
+            )
+
+            eventPublisherService.publishUserRegistrationEvent(registrationEvent)
+
+            return savedAuthUser.toDto()
+
+        } catch (e: Exception) {
+            logger.error("Error during manager user creation: ${e.message}", e)
+            throw e
+        }
     }
 } 

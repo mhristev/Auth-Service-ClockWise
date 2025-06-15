@@ -145,4 +145,64 @@ class AuthController(
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
     }
+
+    @PostMapping("/create-manager")
+    suspend fun createManager(@RequestBody request: RegisterRequest): ResponseEntity<Any> {
+        return try {
+            logger.info("Manager creation attempt for email: ${request.email}")
+            val authUser = authService.createManagerUser(request)
+            logger.info("Manager creation successful for email: ${request.email}")
+            ResponseEntity.status(HttpStatus.CREATED).body(authUser)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Manager creation failed for email: ${request.email}, reason: ${e.message}")
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErrorResponse(
+                    status = HttpStatus.BAD_REQUEST.value(),
+                    error = "Bad Request",
+                    message = e.message ?: "Manager creation failed",
+                    path = "/v1/auth/create-manager"
+                )
+            )
+        } catch (e: Exception) {
+            logger.error("Manager creation error for email: ${request.email}", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ErrorResponse(
+                    status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    error = "Internal Server Error",
+                    message = "An unexpected error occurred during manager creation",
+                    path = "/v1/auth/create-manager"
+                )
+            )
+        }
+    }
+
+    @PostMapping("/create-admin")
+    suspend fun createAdmin(@RequestBody request: RegisterRequest): ResponseEntity<Any> {
+        return try {
+            logger.info("Admin creation attempt for email: ${request.email}")
+            val authUser = authService.createAdminUser(request)
+            logger.info("Admin creation successful for email: ${request.email}")
+            ResponseEntity.status(HttpStatus.CREATED).body(authUser)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Admin creation failed for email: ${request.email}, reason: ${e.message}")
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErrorResponse(
+                    status = HttpStatus.BAD_REQUEST.value(),
+                    error = "Bad Request",
+                    message = e.message ?: "Admin creation failed",
+                    path = "/v1/auth/create-admin"
+                )
+            )
+        } catch (e: Exception) {
+            logger.error("Admin creation error for email: ${request.email}", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ErrorResponse(
+                    status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    error = "Internal Server Error",
+                    message = "An unexpected error occurred during admin creation",
+                    path = "/v1/auth/create-admin"
+                )
+            )
+        }
+    }
 } 

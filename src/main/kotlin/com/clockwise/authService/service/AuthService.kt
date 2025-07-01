@@ -1,15 +1,9 @@
 package com.clockwise.authService.service
 
-import com.clockwise.authService.domain.AuthUser
-import com.clockwise.authService.domain.AuthUserStatus
 import com.clockwise.authService.event.UserRegistrationEvent
-import com.clockwise.authService.repository.AuthUserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
-import kotlinx.coroutines.reactor.awaitSingle
-import java.time.LocalDateTime
 
 data class RegisterRequest(
     val email: String,
@@ -28,48 +22,22 @@ data class LoginResponse(
     val accessToken: String,
     val tokenType: String = "Bearer",
     val expiresIn: Int,
-    val refreshToken: String? = null,
-    val user: AuthUserDto
-)
-
-data class AuthUserDto(
-    val id: String?,
-    val email: String,
-    val firstName: String,
-    val lastName: String,
-    val phoneNumber: String?,
-    val keycloakUserId: String,
-    val emailVerified: Boolean
-)
-
-private fun AuthUser.toDto() = AuthUserDto(
-    id = id,
-    email = email,
-    firstName = firstName,
-    lastName = lastName,
-    phoneNumber = phoneNumber,
-    keycloakUserId = keycloakUserId,
-    emailVerified = emailVerified
+    val refreshToken: String? = null
 )
 
 @Service
 class AuthService(
-    private val authUserRepository: AuthUserRepository,
     private val keycloakService: KeycloakService,
-    private val eventPublisherService: EventPublisherService,
-    private val r2dbcEntityTemplate: R2dbcEntityTemplate
+    private val eventPublisherService: EventPublisherService
 ) {
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
     @Transactional
-    suspend fun registerUser(request: RegisterRequest): AuthUserDto {
+    suspend fun registerUser(request: RegisterRequest): Map<String, String> {
         try {
-            // Check if user already exists
-            if (authUserRepository.existsByEmail(request.email)) {
-                throw IllegalArgumentException("Email already registered")
-            }
+            logger.info("Starting user registration for email: ${request.email}")
 
-            // Create user in Keycloak with 'user' role
+            // Create user in Keycloak with 'employee' role
             val keycloakUserId = keycloakService.createRegularUser(
                 email = request.email,
                 password = request.password,
@@ -77,17 +45,7 @@ class AuthService(
                 lastName = request.lastName
             )
 
-            // Create AuthUser record using explicit INSERT
-            val authUser = AuthUser.newUser(
-                email = request.email,
-                firstName = request.firstName,
-                lastName = request.lastName,
-                phoneNumber = request.phoneNumber,
-                keycloakUserId = keycloakUserId
-            )
-
-            val savedAuthUser = r2dbcEntityTemplate.insert(authUser).awaitSingle()
-            logger.info("Created AuthUser with ID: ${savedAuthUser.id}")
+            logger.info("Created Keycloak user with ID: $keycloakUserId")
 
             // Publish event for User Service to create corresponding User record
             val registrationEvent = UserRegistrationEvent(
@@ -95,13 +53,22 @@ class AuthService(
                 email = request.email,
                 firstName = request.firstName,
                 lastName = request.lastName,
-                phoneNumber = request.phoneNumber
+                phoneNumber = request.phoneNumber,
+                role = "EMPLOYEE"
             )
 
             eventPublisherService.publishUserRegistrationEvent(registrationEvent)
 
-            return savedAuthUser.toDto()
+            logger.info("Successfully published user registration event for Keycloak user: $keycloakUserId")
 
+            return mapOf(
+                "message" to "User registered successfully",
+                "keycloakUserId" to keycloakUserId
+            )
+
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Registration failed for email: ${request.email}, reason: ${e.message}")
+            throw e
         } catch (e: Exception) {
             logger.error("Error during user registration: ${e.message}", e)
             throw e
@@ -110,19 +77,18 @@ class AuthService(
 
     suspend fun loginUser(request: LoginRequest): LoginResponse {
         try {
-            // Get user from database to verify they exist
-            val authUser = authUserRepository.findByEmail(request.email)
-                ?: throw IllegalArgumentException("User not found")
+            logger.info("Starting login for email: ${request.email}")
 
             // Authenticate with Keycloak and get tokens
             val tokenResponse = keycloakService.authenticateUser(request.email, request.password)
+
+            logger.info("Successfully authenticated user: ${request.email}")
 
             return LoginResponse(
                 accessToken = tokenResponse.accessToken,
                 tokenType = "Bearer",
                 expiresIn = tokenResponse.expiresIn,
-                refreshToken = tokenResponse.refreshToken,
-                user = authUser.toDto()
+                refreshToken = tokenResponse.refreshToken
             )
 
         } catch (e: Exception) {
@@ -131,24 +97,13 @@ class AuthService(
         }
     }
 
-    suspend fun getUserByEmail(email: String): AuthUserDto? {
-        return authUserRepository.findByEmail(email)?.toDto()
-    }
-
-    suspend fun getUserByKeycloakId(keycloakUserId: String): AuthUserDto? {
-        return authUserRepository.findByKeycloakUserId(keycloakUserId)?.toDto()
-    }
-
     suspend fun refreshToken(refreshToken: String): TokenResponse {
         return keycloakService.refreshToken(refreshToken)
     }
 
-    suspend fun createAdminUser(request: RegisterRequest): AuthUserDto {
+    suspend fun createAdminUser(request: RegisterRequest): Map<String, String> {
         try {
-            // Check if user already exists
-            if (authUserRepository.existsByEmail(request.email)) {
-                throw IllegalArgumentException("Email already registered")
-            }
+            logger.info("Starting admin user creation for email: ${request.email}")
 
             // Create admin user in Keycloak with roles
             val keycloakUserId = keycloakService.createAdminUser(
@@ -158,17 +113,7 @@ class AuthService(
                 lastName = request.lastName
             )
 
-            // Create AuthUser record using explicit INSERT
-            val authUser = AuthUser.newUser(
-                email = request.email,
-                firstName = request.firstName,
-                lastName = request.lastName,
-                phoneNumber = request.phoneNumber,
-                keycloakUserId = keycloakUserId
-            )
-
-            val savedAuthUser = r2dbcEntityTemplate.insert(authUser).awaitSingle()
-            logger.info("Created Admin AuthUser with ID: ${savedAuthUser.id}")
+            logger.info("Created Admin Keycloak user with ID: $keycloakUserId")
 
             // Publish event for User Service to create corresponding User record
             val registrationEvent = UserRegistrationEvent(
@@ -176,12 +121,18 @@ class AuthService(
                 email = request.email,
                 firstName = request.firstName,
                 lastName = request.lastName,
-                phoneNumber = request.phoneNumber
+                phoneNumber = request.phoneNumber,
+                role = "ADMIN"
             )
 
             eventPublisherService.publishUserRegistrationEvent(registrationEvent)
 
-            return savedAuthUser.toDto()
+            logger.info("Successfully published admin user registration event for Keycloak user: $keycloakUserId")
+
+            return mapOf(
+                "message" to "Admin user created successfully",
+                "keycloakUserId" to keycloakUserId
+            )
 
         } catch (e: Exception) {
             logger.error("Error during admin user creation: ${e.message}", e)
@@ -189,12 +140,9 @@ class AuthService(
         }
     }
 
-    suspend fun createManagerUser(request: RegisterRequest): AuthUserDto {
+    suspend fun createManagerUser(request: RegisterRequest): Map<String, String> {
         try {
-            // Check if user already exists
-            if (authUserRepository.existsByEmail(request.email)) {
-                throw IllegalArgumentException("Email already registered")
-            }
+            logger.info("Starting manager user creation for email: ${request.email}")
 
             // Create manager user in Keycloak with roles
             val keycloakUserId = keycloakService.createManagerUser(
@@ -204,17 +152,7 @@ class AuthService(
                 lastName = request.lastName
             )
 
-            // Create AuthUser record using explicit INSERT
-            val authUser = AuthUser.newUser(
-                email = request.email,
-                firstName = request.firstName,
-                lastName = request.lastName,
-                phoneNumber = request.phoneNumber,
-                keycloakUserId = keycloakUserId
-            )
-
-            val savedAuthUser = r2dbcEntityTemplate.insert(authUser).awaitSingle()
-            logger.info("Created Manager AuthUser with ID: ${savedAuthUser.id}")
+            logger.info("Created Manager Keycloak user with ID: $keycloakUserId")
 
             // Publish event for User Service to create corresponding User record
             val registrationEvent = UserRegistrationEvent(
@@ -222,12 +160,18 @@ class AuthService(
                 email = request.email,
                 firstName = request.firstName,
                 lastName = request.lastName,
-                phoneNumber = request.phoneNumber
+                phoneNumber = request.phoneNumber,
+                role = "MANAGER"
             )
 
             eventPublisherService.publishUserRegistrationEvent(registrationEvent)
 
-            return savedAuthUser.toDto()
+            logger.info("Successfully published manager user registration event for Keycloak user: $keycloakUserId")
+
+            return mapOf(
+                "message" to "Manager user created successfully",
+                "keycloakUserId" to keycloakUserId
+            )
 
         } catch (e: Exception) {
             logger.error("Error during manager user creation: ${e.message}", e)

@@ -144,15 +144,15 @@ class KeycloakService {
             // Get available realm roles
             val realmRoles = keycloak.realm(realm).roles().list()
             logger.info("Retrieved ${realmRoles.size} realm roles")
-            val userRole = realmRoles.find { it.name == "user" }
+            val employeeRole = realmRoles.find { it.name == "employee" }
             
-            // Assign user realm role
-            if (userRole != null) {
-                logger.info("Found user role, assigning to user: $userId")
-                userResource.roles().realmLevel().add(listOf(userRole))
-                logger.info("Assigned user realm role to user: $userId")
+            // Assign employee realm role
+            if (employeeRole != null) {
+                logger.info("Found employee role, assigning to user: $userId")
+                userResource.roles().realmLevel().add(listOf(employeeRole))
+                logger.info("Assigned employee realm role to user: $userId")
             } else {
-                logger.error("User role not found in realm. Available roles: ${realmRoles.map { it.name }}")
+                logger.error("Employee role not found in realm. Available roles: ${realmRoles.map { it.name }}")
             }
             
             logger.info("Successfully created regular user with ID: $userId")
@@ -179,7 +179,7 @@ class KeycloakService {
             // Get available realm roles
             val realmRoles = keycloak.realm(realm).roles().list()
             val managerRole = realmRoles.find { it.name == "manager" }
-            val userRole = realmRoles.find { it.name == "user" }
+            val employeeRole = realmRoles.find { it.name == "employee" }
             
             // Assign realm roles
             if (managerRole != null) {
@@ -187,9 +187,9 @@ class KeycloakService {
                 logger.info("Assigned manager realm role to user: $userId")
             }
             
-            if (userRole != null) {
-                userResource.roles().realmLevel().add(listOf(userRole))
-                logger.info("Assigned user realm role to user: $userId")
+            if (employeeRole != null) {
+                userResource.roles().realmLevel().add(listOf(employeeRole))
+                logger.info("Assigned employee realm role to user: $userId")
             }
             
             // Get client and assign client-specific roles
@@ -231,9 +231,9 @@ class KeycloakService {
             val realmRoles = keycloak.realm(realm).roles().list()
             val adminRole = realmRoles.find { it.name == "admin" }
             val managerRole = realmRoles.find { it.name == "manager" }
-            val userRole = realmRoles.find { it.name == "user" }
+            val employeeRole = realmRoles.find { it.name == "employee" }
             
-            // Assign realm roles (admin should have admin, manager, and user roles)
+            // Assign realm roles (admin should have admin, manager, and employee roles)
             if (adminRole != null) {
                 userResource.roles().realmLevel().add(listOf(adminRole))
                 logger.info("Assigned admin realm role to user: $userId")
@@ -244,9 +244,9 @@ class KeycloakService {
                 logger.info("Assigned manager realm role to user: $userId")
             }
             
-            if (userRole != null) {
-                userResource.roles().realmLevel().add(listOf(userRole))
-                logger.info("Assigned user realm role to user: $userId")
+            if (employeeRole != null) {
+                userResource.roles().realmLevel().add(listOf(employeeRole))
+                logger.info("Assigned employee realm role to user: $userId")
             }
             
             // Get client and assign client-specific roles

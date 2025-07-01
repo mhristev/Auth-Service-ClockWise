@@ -4,16 +4,15 @@ spring:
       client:
         provider:
           keycloak:
-            issuer-uri: http://localhost:8180/auth/realms/clockwise
             user-name-attribute: preferred_username
-            authorization-uri: http://localhost:8180/auth/realms/clockwise/protocol/openid-connect/auth
-            token-uri: http://localhost:8180/auth/realms/clockwise/protocol/openid-connect/token
-            jwk-set-uri: http://localhost:8180/auth/realms/clockwise/protocol/openid-connect/certs
-            user-info-uri: http://localhost:8180/auth/realms/clockwise/protocol/openid-connect/userinfo
+            authorization-uri: http://keycloak:8080/realms/clockwise/protocol/openid-connect/auth
+            token-uri: http://keycloak:8080/realms/clockwise/protocol/openid-connect/token
+            jwk-set-uri: http://keycloak:8080/realms/clockwise/protocol/openid-connect/certs
+            user-info-uri: http://keycloak:8080/realms/clockwise/protocol/openid-connect/userinfo
         registration:
           keycloak:
             client-id: auth-service
-            client-secret: auth-service-secret
+            client-secret: v8Sac9YQKLm0ZrGiS9JgwLRMa4Q0pF7c
             authorization-grant-type: password
             scope:
               - openid
@@ -22,26 +21,27 @@ spring:
               - roles
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/auth/realms/clockwise
-          jwk-set-uri: http://localhost:8180/auth/realms/clockwise/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/clockwise
+          jwk-set-uri: http://keycloak:8080/realms/clockwise/protocol/openid-connect/certs
   
   application:
     name: auth-service
   
+  # R2DBC configuration - uses auth-postgres for Docker
   r2dbc:
-    url: r2dbc:postgresql://localhost:5433/auth_db
+    url: r2dbc:postgresql://auth-postgres:5432/auth_db
     username: postgres
     password: password
     
   flyway:
-    url: jdbc:postgresql://localhost:5433/auth_db
+    url: jdbc:postgresql://auth-postgres:5432/auth_db
     user: postgres
     password: password
     locations: classpath:db/migration
     baseline-on-migrate: true
     
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:29092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -51,7 +51,7 @@ server:
 
 # Keycloak Configuration
 keycloak:
-  server-url: http://localhost:8180/auth
+  server-url: http://keycloak:8080
   realm: clockwise
   admin:
     client-id: admin-cli

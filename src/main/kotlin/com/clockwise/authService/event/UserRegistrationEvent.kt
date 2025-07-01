@@ -10,5 +10,6 @@ data class UserRegistrationEvent(
     val firstName: String,
     val lastName: String,
     val phoneNumber: String? = null,
+    val role: String = "EMPLOYEE", // Role information (ADMIN, MANAGER, EMPLOYEE)
     val timestamp: Long = System.currentTimeMillis()
 ) 

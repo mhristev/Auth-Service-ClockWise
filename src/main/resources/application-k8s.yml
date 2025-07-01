@@ -28,10 +28,11 @@ spring:
   application:
     name: auth-service
   
-  r2dbc:
-    url: r2dbc:postgresql://auth-service-db:5432/authdb
-    username: authuser
-    password: authpassword
+  # R2DBC configuration commented out - Auth Service no longer stores user data
+  # r2dbc:
+  #   url: r2dbc:postgresql://auth-service-db:5432/authdb
+  #   username: authuser
+  #   password: authpassword
     
   flyway:
     url: jdbc:postgresql://auth-service-db:5432/authdb

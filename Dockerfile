@@ -10,5 +10,5 @@ COPY build/libs/*.jar app.jar
 # Expose port
 EXPOSE 8081
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"] 
+# Run the application with Docker profile
+ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar"] 

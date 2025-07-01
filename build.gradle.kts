@@ -40,6 +40,7 @@ dependencies {
 	implementation("org.keycloak:keycloak-admin-client:23.0.7")
 	implementation("org.keycloak:keycloak-core:23.0.7")
 	implementation("jakarta.ws.rs:jakarta.ws.rs-api:3.1.0")
+	implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
 	
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")

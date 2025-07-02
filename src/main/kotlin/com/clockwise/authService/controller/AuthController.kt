@@ -28,13 +28,13 @@ class AuthController(
     private val authService: AuthService
 ) {
 
-    @PostMapping("/authenticate")
-    suspend fun authenticate(@RequestBody request: LoginRequest): ResponseEntity<LoginResponse> = coroutineScope {
-        logger.info { "Login attempt for email: ${request.email}" }
-        val loginResponse = async { authService.loginUser(request) }
-        logger.info { "Login successful for email: ${request.email}" }
-        ResponseEntity.ok(loginResponse.await())
-    }
+    // @PostMapping("/authenticate")
+    // suspend fun authenticate(@RequestBody request: LoginRequest): ResponseEntity<LoginResponse> = coroutineScope {
+    //     logger.info { "Login attempt for email: ${request.email}" }
+    //     val loginResponse = async { authService.loginUser(request) }
+    //     logger.info { "Login successful for email: ${request.email}" }
+    //     ResponseEntity.ok(loginResponse.await())
+    // }
 
     @PostMapping("/register")
     suspend fun register(@RequestBody request: RegisterRequest): ResponseEntity<Any> = coroutineScope {

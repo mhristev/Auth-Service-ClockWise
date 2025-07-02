@@ -14,7 +14,9 @@ import kotlinx.coroutines.reactor.awaitSingle
 import jakarta.ws.rs.core.Response
 
 @Service
-class KeycloakService {
+class KeycloakService(
+    private val jwtUtils: JwtUtils
+) {
     private val logger = LoggerFactory.getLogger(KeycloakService::class.java)
 
     @Value("\${keycloak.server-url}")
@@ -67,11 +69,15 @@ class KeycloakService {
             @Suppress("UNCHECKED_CAST")
             val responseMap = response as Map<String, Any>
 
+            val accessToken = responseMap["access_token"] as String
+            val role = jwtUtils.extractHighestRole(accessToken)
+
             return TokenResponse(
-                accessToken = responseMap["access_token"] as String,
+                accessToken = accessToken,
                 tokenType = responseMap["token_type"] as String? ?: "Bearer",
                 expiresIn = responseMap["expires_in"] as Int,
-                refreshToken = responseMap["refresh_token"] as String?
+                refreshToken = responseMap["refresh_token"] as String?,
+                role = role
             )
 
         } catch (e: Exception) {
@@ -315,11 +321,15 @@ class KeycloakService {
             @Suppress("UNCHECKED_CAST")
             val responseMap = response as Map<String, Any>
 
+            val accessToken = responseMap["access_token"] as String
+            val role = jwtUtils.extractHighestRole(accessToken)
+
             return TokenResponse(
-                accessToken = responseMap["access_token"] as String,
+                accessToken = accessToken,
                 tokenType = responseMap["token_type"] as String? ?: "Bearer",
                 expiresIn = responseMap["expires_in"] as Int,
-                refreshToken = responseMap["refresh_token"] as String?
+                refreshToken = responseMap["refresh_token"] as String?,
+                role = role
             )
 
         } catch (e: Exception) {

@@ -22,7 +22,8 @@ data class LoginResponse(
     val accessToken: String,
     val tokenType: String = "Bearer",
     val expiresIn: Int,
-    val refreshToken: String? = null
+    val refreshToken: String? = null,
+    val role: String
 )
 
 @Service
@@ -88,7 +89,8 @@ class AuthService(
                 accessToken = tokenResponse.accessToken,
                 tokenType = "Bearer",
                 expiresIn = tokenResponse.expiresIn,
-                refreshToken = tokenResponse.refreshToken
+                refreshToken = tokenResponse.refreshToken,
+                role = tokenResponse.role
             )
 
         } catch (e: Exception) {

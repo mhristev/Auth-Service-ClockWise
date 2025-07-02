@@ -8,5 +8,6 @@ data class TokenResponse(
     val accessToken: String,
     val tokenType: String = "Bearer",
     val expiresIn: Int,
-    val refreshToken: String?
+    val refreshToken: String?,
+    val role: String
 ) 

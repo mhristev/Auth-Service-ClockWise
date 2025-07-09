@@ -141,7 +141,7 @@ class KeycloakService(
             // Create user first
             logger.info("Creating user in Keycloak...")
             val userId = createUser(email, password, firstName, lastName)
-            logger.info("User created with ID: $userId, now assigning user role...")
+            logger.info("User created with ID: $userId, now assigning employee role...")
             
             // Get the user resource
             val userResource = keycloak.realm(realm).users().get(userId)
@@ -151,14 +151,41 @@ class KeycloakService(
             val realmRoles = keycloak.realm(realm).roles().list()
             logger.info("Retrieved ${realmRoles.size} realm roles")
             val employeeRole = realmRoles.find { it.name == "employee" }
+            val userRole = realmRoles.find { it.name == "user" }
+            
+            // Remove user role if it exists (to avoid conflicts)
+            if (userRole != null) {
+                try {
+                    userResource.roles().realmLevel().remove(listOf(userRole))
+                    logger.info("Removed conflicting 'user' role from user: $userId")
+                } catch (e: Exception) {
+                    logger.warn("Failed to remove 'user' role, it might not have been assigned yet: ${e.message}")
+                }
+            }
             
             // Assign employee realm role
             if (employeeRole != null) {
                 logger.info("Found employee role, assigning to user: $userId")
-                userResource.roles().realmLevel().add(listOf(employeeRole))
-                logger.info("Assigned employee realm role to user: $userId")
+                try {
+                    userResource.roles().realmLevel().add(listOf(employeeRole))
+                    logger.info("Successfully assigned employee realm role to user: $userId")
+                    
+                    // Verify the role assignment
+                    val assignedRoles = userResource.roles().realmLevel().listAll()
+                    val hasEmployeeRole = assignedRoles.any { it.name == "employee" }
+                    logger.info("Role assignment verification - User has employee role: $hasEmployeeRole")
+                    
+                    if (!hasEmployeeRole) {
+                        logger.error("Employee role assignment verification failed for user: $userId")
+                        throw RuntimeException("Failed to assign employee role")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Failed to assign employee role to user: $userId, error: ${e.message}", e)
+                    throw RuntimeException("Failed to assign employee role: ${e.message}")
+                }
             } else {
                 logger.error("Employee role not found in realm. Available roles: ${realmRoles.map { it.name }}")
+                throw RuntimeException("Employee role not found in Keycloak realm")
             }
             
             logger.info("Successfully created regular user with ID: $userId")

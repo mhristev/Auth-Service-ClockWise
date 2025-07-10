@@ -1,5 +1,7 @@
 package com.clockwise.authService.event
 
+import com.clockwise.authService.service.RegistrationPrivacyConsent
+
 /**
  * Event published when a user registers in Auth Service
  * This will be consumed by User Service to create corresponding User record
@@ -11,5 +13,6 @@ data class UserRegistrationEvent(
     val lastName: String,
     val phoneNumber: String? = null,
     val role: String = "EMPLOYEE", // Role information (ADMIN, MANAGER, EMPLOYEE)
+    val privacyConsent: RegistrationPrivacyConsent? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) 

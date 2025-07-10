@@ -5,12 +5,25 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
+data class PrivacyConsent(
+    val marketingConsent: Boolean = false,
+    val analyticsConsent: Boolean = false,
+    val thirdPartyDataSharingConsent: Boolean = false
+)
+
+data class RegistrationPrivacyConsent(
+    val marketingConsent: Boolean = false,
+    val analyticsConsent: Boolean = false,
+    val thirdPartyDataSharingConsent: Boolean = false
+)
+
 data class RegisterRequest(
     val email: String,
     val password: String,
     val firstName: String,
     val lastName: String,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val privacyConsent: PrivacyConsent? = null
 )
 
 data class LoginRequest(
@@ -34,7 +47,7 @@ class AuthService(
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
     @Transactional
-    suspend fun registerUser(request: RegisterRequest): Map<String, String> {
+    suspend fun registerUser(request: RegisterRequest): LoginResponse {
         try {
             logger.info("Starting user registration for email: ${request.email}")
 
@@ -55,16 +68,31 @@ class AuthService(
                 firstName = request.firstName,
                 lastName = request.lastName,
                 phoneNumber = request.phoneNumber,
-                role = "EMPLOYEE"
+                role = "EMPLOYEE",
+                privacyConsent = request.privacyConsent?.let { consent ->
+                    RegistrationPrivacyConsent(
+                        marketingConsent = consent.marketingConsent,
+                        analyticsConsent = consent.analyticsConsent,
+                        thirdPartyDataSharingConsent = consent.thirdPartyDataSharingConsent
+                    )
+                }
             )
 
             eventPublisherService.publishUserRegistrationEvent(registrationEvent)
 
             logger.info("Successfully published user registration event for Keycloak user: $keycloakUserId")
 
-            return mapOf(
-                "message" to "User registered successfully",
-                "keycloakUserId" to keycloakUserId
+            // Authenticate the newly created user to get tokens
+            val tokenResponse = keycloakService.authenticateUser(request.email, request.password)
+
+            logger.info("Successfully authenticated newly registered user: ${request.email}")
+
+            return LoginResponse(
+                accessToken = tokenResponse.accessToken,
+                tokenType = "Bearer",
+                expiresIn = tokenResponse.expiresIn,
+                refreshToken = tokenResponse.refreshToken,
+                role = tokenResponse.role
             )
 
         } catch (e: IllegalArgumentException) {
@@ -103,7 +131,7 @@ class AuthService(
         return keycloakService.refreshToken(refreshToken)
     }
 
-    suspend fun createAdminUser(request: RegisterRequest): Map<String, String> {
+    suspend fun createAdminUser(request: RegisterRequest): LoginResponse {
         try {
             logger.info("Starting admin user creation for email: ${request.email}")
 
@@ -124,16 +152,31 @@ class AuthService(
                 firstName = request.firstName,
                 lastName = request.lastName,
                 phoneNumber = request.phoneNumber,
-                role = "ADMIN"
+                role = "ADMIN",
+                privacyConsent = request.privacyConsent?.let { consent ->
+                    RegistrationPrivacyConsent(
+                        marketingConsent = consent.marketingConsent,
+                        analyticsConsent = consent.analyticsConsent,
+                        thirdPartyDataSharingConsent = consent.thirdPartyDataSharingConsent
+                    )
+                }
             )
 
             eventPublisherService.publishUserRegistrationEvent(registrationEvent)
 
             logger.info("Successfully published admin user registration event for Keycloak user: $keycloakUserId")
 
-            return mapOf(
-                "message" to "Admin user created successfully",
-                "keycloakUserId" to keycloakUserId
+            // Authenticate the newly created admin user to get tokens
+            val tokenResponse = keycloakService.authenticateUser(request.email, request.password)
+
+            logger.info("Successfully authenticated newly created admin user: ${request.email}")
+
+            return LoginResponse(
+                accessToken = tokenResponse.accessToken,
+                tokenType = "Bearer",
+                expiresIn = tokenResponse.expiresIn,
+                refreshToken = tokenResponse.refreshToken,
+                role = tokenResponse.role
             )
 
         } catch (e: Exception) {
@@ -142,7 +185,7 @@ class AuthService(
         }
     }
 
-    suspend fun createManagerUser(request: RegisterRequest): Map<String, String> {
+    suspend fun createManagerUser(request: RegisterRequest): LoginResponse {
         try {
             logger.info("Starting manager user creation for email: ${request.email}")
 
@@ -163,16 +206,31 @@ class AuthService(
                 firstName = request.firstName,
                 lastName = request.lastName,
                 phoneNumber = request.phoneNumber,
-                role = "MANAGER"
+                role = "MANAGER",
+                privacyConsent = request.privacyConsent?.let { consent ->
+                    RegistrationPrivacyConsent(
+                        marketingConsent = consent.marketingConsent,
+                        analyticsConsent = consent.analyticsConsent,
+                        thirdPartyDataSharingConsent = consent.thirdPartyDataSharingConsent
+                    )
+                }
             )
 
             eventPublisherService.publishUserRegistrationEvent(registrationEvent)
 
             logger.info("Successfully published manager user registration event for Keycloak user: $keycloakUserId")
 
-            return mapOf(
-                "message" to "Manager user created successfully",
-                "keycloakUserId" to keycloakUserId
+            // Authenticate the newly created manager user to get tokens
+            val tokenResponse = keycloakService.authenticateUser(request.email, request.password)
+
+            logger.info("Successfully authenticated newly created manager user: ${request.email}")
+
+            return LoginResponse(
+                accessToken = tokenResponse.accessToken,
+                tokenType = "Bearer",
+                expiresIn = tokenResponse.expiresIn,
+                refreshToken = tokenResponse.refreshToken,
+                role = tokenResponse.role
             )
 
         } catch (e: Exception) {

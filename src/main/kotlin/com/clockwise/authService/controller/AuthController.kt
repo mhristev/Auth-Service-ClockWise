@@ -37,7 +37,7 @@ class AuthController(
     // }
 
     @PostMapping("/register")
-    suspend fun register(@RequestBody request: RegisterRequest): ResponseEntity<Any> = coroutineScope {
+    suspend fun register(@RequestBody request: RegisterRequest): ResponseEntity<LoginResponse> = coroutineScope {
         logger.info { "Registration attempt for email: ${request.email}" }
         val registrationResult = async { authService.registerUser(request) }
         logger.info { "Registration successful for email: ${request.email}" }
@@ -59,7 +59,7 @@ class AuthController(
     }
 
     @PostMapping("/create-manager")
-    suspend fun createManager(@RequestBody request: RegisterRequest): ResponseEntity<Any> = coroutineScope {
+    suspend fun createManager(@RequestBody request: RegisterRequest): ResponseEntity<LoginResponse> = coroutineScope {
         logger.info { "Manager creation attempt for email: ${request.email}" }
         val managerResult = async { authService.createManagerUser(request) }
         logger.info { "Manager creation successful for email: ${request.email}" }
@@ -67,7 +67,7 @@ class AuthController(
     }
 
     @PostMapping("/create-admin")
-    suspend fun createAdmin(@RequestBody request: RegisterRequest): ResponseEntity<Any> = coroutineScope {
+    suspend fun createAdmin(@RequestBody request: RegisterRequest): ResponseEntity<LoginResponse> = coroutineScope {
         logger.info { "Admin creation attempt for email: ${request.email}" }
         val adminResult = async { authService.createAdminUser(request) }
         logger.info { "Admin creation successful for email: ${request.email}" }
